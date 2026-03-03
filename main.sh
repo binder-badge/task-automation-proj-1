@@ -1,6 +1,4 @@
 #! /bin/bash
-echo "testing 123"
-echo "shriya is testing" 
 start_apm(){
     echo "start APM execs"
 }
