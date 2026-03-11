@@ -1,4 +1,6 @@
 #! /bin/bash
+LOCAL_IP=$(ip addr show | grep -v '127.0.0.1' | grep -oP 'inet\s\K[\d.]+' | head -n 1)
+
 start_apm(){
     echo "start APM execs"
 }
