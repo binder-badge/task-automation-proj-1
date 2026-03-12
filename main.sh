@@ -57,7 +57,23 @@ proc_level_metrics(){
 }
 
 sys_level_metrics(){
-    echo "collecting sys metrics $1"
+    while true;
+    do
+        # gather raw stats
+        network_stats=$(ifstat ens | grep ens | tr -s " " | cut -d " " -f 6,8)
+        drive_writes=$(iostat /dev/sda | grep sda | tr -s " " | cut -d " " -f 4)
+        drive_usage=$(df / | tail -n 1 | tr -s " " | cut -d " " -f 4)
+        
+        # parse stats to conform to project specs
+        network_stats=network_stats/1000 # 
+        drive_usage=drive_usage/1000
+        drive_usage=drive_usage/1000
+        
+        # combine it all
+        data_collected=$network_stats + $drive_usage + $drive_writes
+        echo "$SECONDS $data_collected" >> "system_metrics.csv"
+        sleep 30
+    done
 }
 
 ############################################################
