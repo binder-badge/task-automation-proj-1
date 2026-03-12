@@ -70,8 +70,8 @@ sys_level_metrics(){
         drive_usage=drive_usage/1000
         
         # combine it all
-        data_collected=$network_stats + $drive_usage + $drive_writes
-        echo "$SECONDS $data_collected" >> "system_metrics.csv"
+        # data_collected=$network_stats + $drive_usage + $drive_writes
+        # echo "$SECONDS $data_collected" >> "system_metrics.csv"
         sleep 30
     done
 }
