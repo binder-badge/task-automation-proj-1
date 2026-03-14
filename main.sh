@@ -121,8 +121,8 @@ cleanup(){
     echo "Cleaning up..."
     for pid in "${arr_pid[@]}"
     do
-        kill "$pid"
-        echo terminated "${arr_pid[@]}"
+        kill -9 "$pid"
+        echo terminated $pid
     done
 
     #kills any background jobs
