@@ -16,7 +16,7 @@ start_apm(){
     for i in {1..6}
     do
         # generate header for csv
-        echo "Seconds,CPU,Memory" >> "APM${process_num}_metrics.csv"
+        echo "Seconds,CPU,Memory" >> "APM$i_metrics.csv"
         
         #start a C executable that has name APM1, APM2, APM3, APM4, APM5, APM6 in ../project1_executables/
         ../project1_executables/APM$i $LOCAL_IP &
@@ -125,7 +125,11 @@ cleanup(){
     done
 
     #kills any background jobs
-    kill $(jobs -p) 2>/dev/null
+    for job in $(jobs -p);
+    do
+        kill -s SIGTERM $job #2>/dev/null
+        echo terminated $job
+    done
     echo terminated "${arr_pid[@]}"
     exit 0
 }
