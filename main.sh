@@ -141,7 +141,8 @@ start_apm
 sys_level_metrics &
 proc_level_metrics &
 
+wait $0
 # keep script alive to make sure it receives the sigint to trigger cleanup script
-while [[ true ]] ; do
-    sleep 1
-done
+# while [[ true ]] ; do
+#     sleep 1
+# done
