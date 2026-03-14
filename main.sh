@@ -122,15 +122,15 @@ cleanup(){
     for pid in "${arr_pid[@]}"
     do
         kill "$pid"
+        echo terminated "${arr_pid[@]}"
     done
 
     #kills any background jobs
     for job in $(jobs -p);
     do
-        kill -s SIGTERM $job #2>/dev/null
+        kill "$job" #2>/dev/null
         echo terminated $job
     done
-    echo terminated "${arr_pid[@]}"
     exit 0
 }
 #trap cleanup EXIT will call the cleanup function when the script exits
