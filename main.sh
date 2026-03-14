@@ -16,7 +16,7 @@ start_apm(){
     for i in {1..6}
     do
         # generate header for csv
-        echo "Seconds,CPU,Memory" >> "APM$i_metrics.csv"
+        echo "Seconds,CPU,Memory" > "APM$i_metrics.csv"
         
         #start a C executable that has name APM1, APM2, APM3, APM4, APM5, APM6 in ../project1_executables/
         ../project1_executables/APM$i $LOCAL_IP &
@@ -77,7 +77,7 @@ proc_level_metrics(){
 #   system_metrics.csv
 ############################################################
 sys_level_metrics(){
-    echo "Seconds,Rx,Tx,Write speed,Available disk capacity" >> "system_metrics.csv"
+    echo "Seconds,Rx,Tx,Write speed,Available disk capacity" > "system_metrics.csv"
     while true;
     do
         # gather raw stats
