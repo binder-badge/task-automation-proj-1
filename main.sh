@@ -56,25 +56,53 @@ proc_level_metrics(){
     done
 }
 
+############################################################
+# FUNCTION: sys_level_metrics
+#
+# Continuously collects system metrics every 5 seconds.
+#
+# Metrics collected:
+#   Rx
+#   Tx
+#   KBps written to disk
+#   MBs left on system
+#
+# Data sources:
+#   ifstat, iostat, df
+#
+# Output files:
+#   system_metrics.csv
+############################################################
 sys_level_metrics(){
     while true;
     do
         # gather raw stats
-        network_stats=$(ifstat ens | grep ens | tr -s " " | cut -d " " -f 6,8)
-        drive_writes=$(iostat /dev/sda | grep sda | tr -s " " | cut -d " " -f 4)
-        drive_usage=$(df / | tail -n 1 | tr -s " " | cut -d " " -f 4)
-        
+        adapter="ens"
+        drive="sda"
+
+        network_stats=$(ifstat $adapter | grep $adapter | tr -s " " | cut -d " " -f 6,8 | sed "s/K/000/g") # fetches Rx (Download) + Tx (Upload) stats
+        drive_writes=$(iostat /dev/$drive | grep $drive | tr -s " " | cut -d " " -f 4) # fetches kbps written to disk 
+        drive_usage=$(df / | tail -n 1 | tr -s " " | cut -d " " -f 4) # fetches how muuch free space is left on /
+
         # parse stats to conform to project specs
-        network_stats=network_stats/1000 # 
-        drive_usage=drive_usage/1000
-        drive_usage=drive_usage/1000
+        
+        # split the network stats and divide into kbps
+        upload=$(echo $network_stats | cut -d " " -f 2)
+        upload=$(awk -v val="$upload" 'BEGIN {printf "%.2f", val / 1024}')
+
+        download=$(echo $network_stats | cut -d " " -f 1)
+        download=$(awk -v val="$download" 'BEGIN {printf "%.2f", val / 1024}')
+
+        network_stats=$download,$upload
+        
+        drive_usage=$(awk -v val="$drive_usage" 'BEGIN {printf "%.2f", val / 1024}')
         
         # combine it all
-        # data_collected=$network_stats + $drive_usage + $drive_writes
-        # echo "$SECONDS $data_collected" >> "system_metrics.csv"
-        sleep 30
+        echo "$SECONDS,$network_stats,$drive_writes,$drive_usage" >> system_metrics.csv
+        sleep 5
     done
 }
+
 
 ############################################################
 # FUNCTION: cleanup
