@@ -51,7 +51,7 @@ proc_level_metrics(){
             pid=${arr_pid[$index]}
             process_num=$((index+1))
 
-            data_collected=$(ps -p "$pid" -o %cpu,%mem --no-headers)
+            data_collected=$(ps -p "$pid" -o %cpu,%mem --no-headers | tr -s " " | sed "s/ /,/g")
             
             echo "$SECONDS,$data_collected" >> "APM${process_num}_metrics.csv"
         done
