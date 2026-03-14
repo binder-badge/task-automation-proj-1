@@ -77,7 +77,7 @@ sys_level_metrics(){
     while true;
     do
         # gather raw stats
-        adapter="ens"
+        adapter="ens192"
         drive="sda"
 
         network_stats=$(ifstat $adapter | grep $adapter | tr -s " " | cut -d " " -f 6,8 | sed "s/K/000/g") # fetches Rx (Download) + Tx (Upload) stats
