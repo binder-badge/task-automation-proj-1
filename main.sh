@@ -16,7 +16,7 @@ start_apm(){
     for i in {1..6}
     do
         # generate header for csv
-        echo "Seconds,CPU,Memory" > "APM$i_metrics.csv"
+        echo "Seconds,CPU,Memory" > "APM$(echo $i)_metrics.csv"
         
         #start a C executable that has name APM1, APM2, APM3, APM4, APM5, APM6 in ../project1_executables/
         ../project1_executables/APM$i $LOCAL_IP &
@@ -53,7 +53,7 @@ proc_level_metrics(){
 
             data_collected=$(ps -p "$pid" -o %cpu,%mem --no-headers)
             
-            echo "$data_collected" >> "APM${process_num}_metrics.csv"
+            echo "$SECONDS,$data_collected" >> "APM${process_num}_metrics.csv"
         done
         sleep 5
     done
