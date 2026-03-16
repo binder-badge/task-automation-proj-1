@@ -16,10 +16,10 @@ start_apm(){
     for i in {1..6}
     do
         # generate header for csv
-        echo "Seconds,CPU,Memory" > "APM$(echo $i)_metrics.csv"
+        echo "Seconds,CPU,Memory" > "APM${i}_metrics.csv"
         
-        #start a C executable that has name APM1, APM2, APM3, APM4, APM5, APM6 in ../project1_executables/
-        ../project1_executables/APM$i $LOCAL_IP &
+        #start a C executable that has name APM1, APM2, APM3, APM4, APM5, APM6 in ./project1_executables/
+        ./project1_executables/APM$i $LOCAL_IP &
         arr_pid+=("$!")
     done
     echo "PIDs: ${arr_pid[@]}"
@@ -54,7 +54,9 @@ proc_level_metrics(){
             # data_collected=$(ps -p "$pid" -o %cpu,%mem --no-headers | tr -s " " | sed "s/ +/,/g")
             data_collected=$(ps -p "$pid" -o %cpu,%mem --no-headers | sed "s/ \+/,/g" | sed "s/^,//g")
             
-            echo "$SECONDS,$data_collected" >> "APM${process_num}_metrics.csv"
+            if [ -n "$data_collected" ]; then
+                echo "$SECONDS,$data_collected" >> "APM${process_num}_metrics.csv"
+            fi
         done
         sleep 5
     done
@@ -82,10 +84,11 @@ sys_level_metrics(){
     while true;
     do
         # gather raw stats
-        adapter="ens192"
+        adapter=$(ip -o link show | awk -F': ' '{print $2}' | grep -E '^ens' | head -n 1)
+        if [ -z "$adapter" ]; then adapter="ens192"; fi
         drive="sda"
 
-        network_stats=$(ifstat $adapter | grep $adapter | tr -s " " | cut -d " " -f 6,8 | sed "s/K/000/g") # fetches Rx (Download) + Tx (Upload) stats
+        network_stats=$(ifstat $adapter --scan=1 | grep $adapter | tr -s " " | cut -d " " -f 6,8 | sed "s/K/000/g") # fetches Rx (Download) + Tx (Upload) stats
         drive_writes=$(iostat /dev/$drive | grep $drive | tr -s " " | cut -d " " -f 4) # fetches kbps written to disk 
         drive_usage=$(df / | tail -n 1 | tr -s " " | cut -d " " -f 4) # fetches how muuch free space is left on /
 
@@ -122,20 +125,20 @@ cleanup(){
     echo "Cleaning up..."
     for pid in "${arr_pid[@]}"
     do
-        kill -9 "$pid"
+        kill -9 "$pid" 2>/dev/null
         echo terminated $pid
     done
 
     #kills any background jobs
     for job in $(jobs -p);
     do
-        kill "$job" #2>/dev/null
+        kill "$job" 2>/dev/null
         echo terminated $job
     done
     exit 0
 }
 #trap cleanup EXIT will call the cleanup function when the script exits
-trap cleanup SIGINT
+trap cleanup EXIT
 
 start_apm
 #monitoruing should run in background
