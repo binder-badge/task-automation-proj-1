@@ -51,9 +51,10 @@ proc_level_metrics(){
             pid=${arr_pid[$index]}
             process_num=$((index+1))
 
-            data_collected=$(ps -p "$pid" -o %cpu,%mem --no-headers | tr -s " " | sed "s/ /,/g")
+            # data_collected=$(ps -p "$pid" -o %cpu,%mem --no-headers | tr -s " " | sed "s/ +/,/g")
+            data_collected=$(ps -p "$pid" -o %cpu,%mem --no-headers | sed "s/ \+/,/g" | sed "s/^,//g")
             
-            echo "$SECONDS$data_collected" >> "APM${process_num}_metrics.csv"
+            echo "$SECONDS,$data_collected" >> "APM${process_num}_metrics.csv"
         done
         sleep 5
     done
