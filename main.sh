@@ -88,7 +88,7 @@ sys_level_metrics(){
         if [ -z "$adapter" ]; then adapter="ens192"; fi
         drive="sda"
 
-        network_stats=$(ifstat $adapter --scan=1 | grep $adapter | tr -s " " | cut -d " " -f 6,8 | sed "s/K/000/g") # fetches Rx (Download) + Tx (Upload) stats
+        network_stats=$(ifstat $adapter | grep $adapter | tr -s " " | cut -d " " -f 6,8 | sed "s/K/000/g") # fetches Rx (Download) + Tx (Upload) stats
         drive_writes=$(iostat /dev/$drive | grep $drive | tr -s " " | cut -d " " -f 4) # fetches kbps written to disk 
         drive_usage=$(df / | tail -n 1 | tr -s " " | cut -d " " -f 4) # fetches how muuch free space is left on /
 
