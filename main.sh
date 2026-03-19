@@ -80,17 +80,19 @@ proc_level_metrics(){
 ############################################################
 sys_level_metrics(){
     echo "Seconds,Rx,Tx,Write speed,Available disk capacity" > "system_metrics.csv"
-    
+
     adapter=$(ip -o link show | awk -F': ' '{print $2}' | grep -E '^ens' | head -n 1)
     if [ -z "$adapter" ]; then adapter="ens192"; fi
 
-    # cleanup
+    # kill previous ifstat instances + remove their sockets
     pkill -f ifstat 2>/dev/null
     rm -f /tmp/.ifstat.u*
 
-    # i have no idea why but we gotta run ifstat in the background to get it to update stats in 1 second interval, which we then read with another background process to read it in 5 second intervals, it honestly makes no sense but its in the rubric so
+    # i have no idea why but we gotta run ifstat in the background to get it to update stats in 1 second interval,
+    # which we then read with another background process to read it in 5 second intervals, it honestly makes no
+    # sense but its in the rubric so
     ifstat $adapter --scan=1 > /tmp/ifstat_metrics.txt &
-    
+
     while true;
     do
         # read the last sample from the temp
@@ -111,14 +113,14 @@ sys_level_metrics(){
             else if (/G$/) { sub(/G$/, ""); printf "%.2f", $1 * 1024 * 1024 }
             else { printf "%.2f", $1 / 1024 }
         }')
-        
+
         network_stats="$download,$upload"
 
         drive="sda"
-        drive_writes=$(iostat /dev/$drive | grep $drive | tr -s " " | cut -d " " -f 4) 
+        drive_writes=$(iostat /dev/$drive | grep $drive | tr -s " " | cut -d " " -f 4)
         drive_usage=$(df / | tail -n 1 | tr -s " " | cut -d " " -f 4)
         drive_usage=$(awk -v val="$drive_usage" 'BEGIN {printf "%.2f", val / 1024}')
-        
+
         echo "$SECONDS,$network_stats,$drive_writes,$drive_usage" >> system_metrics.csv
         sleep 5
     done
