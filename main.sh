@@ -96,7 +96,10 @@ sys_level_metrics(){
     while true;
     do
         # read the last sample from the temp
-        network_stats=$(tail -n 1 /tmp/.ifstat.u$UID | sed 's/^[ \t]*//' | tr -s " ")
+        # for some reason the log file just stays the same over the time i tested this 
+        # and i dont know why and at this point im just going to use the standalone version
+        # network_stats=$(grep $adapter /tmp/.ifstat.u$UID | sed 's/^[ \t0-9]*//' | tr -s " ")
+        network_stats=$(ifstat $adapter | grep $adapter | tr -s " " | cut -d " " -f 6,8)
 
         # RX Rate - column 7. convert K, M, and G to num in kbps
         download=$(echo "$network_stats" | cut -d " " -f 7 | awk '{
