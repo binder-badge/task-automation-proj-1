@@ -91,12 +91,12 @@ sys_level_metrics(){
     # i have no idea why but we gotta run ifstat in the background to get it to update stats in 1 second interval,
     # which we then read with another background process to read it in 5 second intervals, it honestly makes no
     # sense but its in the rubric so
-    ifstat $adapter --scan=1 > /tmp/ifstat_metrics.txt &
+    ifstat $adapter --scan=1 
 
     while true;
     do
         # read the last sample from the temp
-        network_stats=$(tail -n 1 /tmp/ifstat_metrics.txt | sed 's/^[ \t]*//' | tr -s " ")
+        network_stats=$(tail -n 1 /tmp/.ifstat.u$UID | sed 's/^[ \t]*//' | tr -s " ")
 
         # RX Rate - column 7. convert K, M, and G to num in kbps
         download=$(echo "$network_stats" | cut -d " " -f 7 | awk '{
