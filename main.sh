@@ -102,7 +102,7 @@ sys_level_metrics(){
         network_stats=$(ifstat $adapter | grep $adapter | tr -s " " | cut -d " " -f 6,8)
 
         # RX Rate - column 7. convert K, M, and G to num in kbps
-        download=$(echo "$network_stats" | cut -d " " -f 7 | awk '{
+        download=$(echo "$network_stats" | cut -d " " -f 2 | awk '{
             if (/K$/) { sub(/K$/, ""); printf "%.2f", $1 }
             else if (/M$/) { sub(/M$/, ""); printf "%.2f", $1 * 1024 }
             else if (/G$/) { sub(/G$/, ""); printf "%.2f", $1 * 1024 * 1024 }
@@ -110,7 +110,7 @@ sys_level_metrics(){
         }')
 
         # TX Rate - column 9. convert K, M, and G to num in kbps
-        upload=$(echo "$network_stats" | cut -d " " -f 9 | awk '{
+        upload=$(echo "$network_stats" | cut -d " " -f 1 | awk '{
             if (/K$/) { sub(/K$/, ""); printf "%.2f", $1 }
             else if (/M$/) { sub(/M$/, ""); printf "%.2f", $1 * 1024 }
             else if (/G$/) { sub(/G$/, ""); printf "%.2f", $1 * 1024 * 1024 }
