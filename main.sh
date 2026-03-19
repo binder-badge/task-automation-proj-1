@@ -81,32 +81,41 @@ proc_level_metrics(){
 ############################################################
 sys_level_metrics(){
     echo "Seconds,Rx,Tx,Write speed,Available disk capacity" > "system_metrics.csv"
+    
+    adapter=$(ip -o link show | awk -F': ' '{print $2}' | grep -E '^ens' | head -n 1)
+    if [ -z "$adapter" ]; then adapter="ens192"; fi
+
+    # i have no idea why but we gotta run ifstat in the background to get it to update stats in 1 second interval, which we then read with another background process to read it in 5 second intervals, it honestly makes no sense but its in the rubric so
+    ifstat $adapter --scan=1 > /tmp/ifstat_metrics.txt &
+    
     while true;
     do
-        # gather raw stats
-        adapter=$(ip -o link show | awk -F': ' '{print $2}' | grep -E '^ens' | head -n 1)
-        if [ -z "$adapter" ]; then adapter="ens192"; fi
-        drive="sda"
+        # read the last sample from the temp
+        network_stats=$(tail -n 1 /tmp/ifstat_metrics.txt | sed 's/^[ \t]*//' | tr -s " ")
 
-        network_stats=$(ifstat $adapter | grep $adapter | tr -s " " | cut -d " " -f 6,8 | sed "s/K/000/g") # fetches Rx (Download) + Tx (Upload) stats
-        drive_writes=$(iostat /dev/$drive | grep $drive | tr -s " " | cut -d " " -f 4) # fetches kbps written to disk 
-        drive_usage=$(df / | tail -n 1 | tr -s " " | cut -d " " -f 4) # fetches how muuch free space is left on /
+        # RX Rate - column 7. convert K, M, and G to num in kbps
+        download=$(echo "$network_stats" | cut -d " " -f 7 | awk '{
+            if (/K$/) { sub(/K$/, ""); printf "%.2f", $1 }
+            else if (/M$/) { sub(/M$/, ""); printf "%.2f", $1 * 1024 }
+            else if (/G$/) { sub(/G$/, ""); printf "%.2f", $1 * 1024 * 1024 }
+            else { printf "%.2f", $1 / 1024 }
+        }')
 
-        # parse stats to conform to project specs
+        # TX Rate - column 9. convert K, M, and G to num in kbps
+        upload=$(echo "$network_stats" | cut -d " " -f 9 | awk '{
+            if (/K$/) { sub(/K$/, ""); printf "%.2f", $1 }
+            else if (/M$/) { sub(/M$/, ""); printf "%.2f", $1 * 1024 }
+            else if (/G$/) { sub(/G$/, ""); printf "%.2f", $1 * 1024 * 1024 }
+            else { printf "%.2f", $1 / 1024 }
+        }')
         
-        # split the network stats and divide into kbps
-        upload=$(echo $network_stats | cut -d " " -f 2)
-        upload=$(awk -v val="$upload" 'BEGIN {printf "%.2f", val}')
+        network_stats="$download,$upload"
 
-        download=$(echo $network_stats | cut -d " " -f 1)
-        download=$(awk -v val="$download" 'BEGIN {printf "%.2f", val}')
-
-        network_stats=$download,$upload
-
-        # drive is in mbps unlike upload and download as per the rubric
+        drive="sda"
+        drive_writes=$(iostat /dev/$drive | grep $drive | tr -s " " | cut -d " " -f 4) 
+        drive_usage=$(df / | tail -n 1 | tr -s " " | cut -d " " -f 4)
         drive_usage=$(awk -v val="$drive_usage" 'BEGIN {printf "%.2f", val / 1024}')
         
-        # combine it all
         echo "$SECONDS,$network_stats,$drive_writes,$drive_usage" >> system_metrics.csv
         sleep 5
     done
