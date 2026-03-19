@@ -96,13 +96,14 @@ sys_level_metrics(){
         
         # split the network stats and divide into kbps
         upload=$(echo $network_stats | cut -d " " -f 2)
-        upload=$(awk -v val="$upload" 'BEGIN {printf "%.2f", val / 1024}')
+        upload=$(awk -v val="$upload" 'BEGIN {printf "%.2f", val}')
 
         download=$(echo $network_stats | cut -d " " -f 1)
-        download=$(awk -v val="$download" 'BEGIN {printf "%.2f", val / 1024}')
+        download=$(awk -v val="$download" 'BEGIN {printf "%.2f", val}')
 
         network_stats=$download,$upload
-        
+
+        # drive is in mbps unlike upload and download as per the rubric
         drive_usage=$(awk -v val="$drive_usage" 'BEGIN {printf "%.2f", val / 1024}')
         
         # combine it all
